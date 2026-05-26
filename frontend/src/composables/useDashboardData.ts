@@ -1,4 +1,4 @@
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, shallowRef, watch } from "vue";
 import {
   type AuctionResult,
   type MarketShare,
@@ -8,6 +8,7 @@ import {
   type TimeSeriesPoint,
   type UnitPerformance,
   getMarketShare,
+  getLatestDate,
   getOptions,
   getProducts,
   getResults,
@@ -23,13 +24,13 @@ export function useDashboardData() {
   const serviceType = ref("");
   const auctionUnit = ref("");
   const auctionProduct = ref("");
-  const results = ref<AuctionResult[]>([]);
-  const summary = ref<Summary | null>(null);
-  const options = ref<Options | null>(null);
-  const marketShare = ref<MarketShare[]>([]);
-  const timeseries = ref<TimeSeriesPoint[]>([]);
-  const units = ref<UnitPerformance[]>([]);
-  const products = ref<ProductPerformance[]>([]);
+  const results = shallowRef<AuctionResult[]>([]);
+  const summary = shallowRef<Summary | null>(null);
+  const options = shallowRef<Options | null>(null);
+  const marketShare = shallowRef<MarketShare[]>([]);
+  const timeseries = shallowRef<TimeSeriesPoint[]>([]);
+  const units = shallowRef<UnitPerformance[]>([]);
+  const products = shallowRef<ProductPerformance[]>([]);
   const loading = ref(false);
   const ingesting = ref(false);
   const error = ref("");
@@ -37,8 +38,21 @@ export function useDashboardData() {
 
   const hasResults = computed(() => results.value.length > 0);
 
-  onMounted(loadAll);
+  onMounted(initializeDashboard);
   watch([selectedDate, serviceType, auctionUnit, auctionProduct], loadAll);
+
+  async function initializeDashboard() {
+    try {
+      const latest = await getLatestDate();
+      if (latest.date && latest.date !== selectedDate.value) {
+        selectedDate.value = latest.date;
+        return;
+      }
+    } catch {
+      // Fall back to the current London delivery date if the database is empty or unavailable.
+    }
+    await loadAll();
+  }
 
   async function loadAll() {
     loading.value = true;
