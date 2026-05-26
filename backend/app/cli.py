@@ -3,7 +3,7 @@ import json
 from typing import Optional
 
 from app.dates import resolve_target_date
-from app.ingestion import ingest
+from app.ingestion_service import ingest_habitat_results
 
 
 def main(argv: Optional[list] = None) -> int:
@@ -16,7 +16,7 @@ def main(argv: Optional[list] = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "ingest":
         target_date = resolve_target_date(args.date)
-        run = ingest(target_date)
+        run = ingest_habitat_results(target_date)
         print(json.dumps(run, indent=2, sort_keys=True))
         return 0
 
