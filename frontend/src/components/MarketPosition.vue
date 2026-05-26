@@ -2,6 +2,7 @@
 import { RefreshCw } from "lucide-vue-next";
 import { defineAsyncComponent } from "vue";
 import type { MarketShare } from "../api";
+import LoadingState from "./LoadingState.vue";
 
 const MarketShareChart = defineAsyncComponent(() => import("./charts/MarketShareChart.vue"));
 
@@ -9,6 +10,7 @@ defineProps<{
   rows: MarketShare[];
   status: string;
   error: string;
+  loading: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -29,7 +31,8 @@ const emit = defineEmits<{
       </button>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
-    <div class="marketGrid">
+    <LoadingState v-if="loading" label="Loading market position" />
+    <div v-else class="marketGrid">
       <MarketShareChart :rows="rows" />
       <div class="shareTable">
         <table>
@@ -43,7 +46,7 @@ const emit = defineEmits<{
           </thead>
           <tbody>
             <tr v-if="!rows.length">
-              <td colspan="4">Run ingestion to store market comparison data.</td>
+              <td colspan="4">Update this day to load market comparison.</td>
             </tr>
             <tr
               v-for="row in rows"

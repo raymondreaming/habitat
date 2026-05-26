@@ -31,12 +31,14 @@ export function useDashboardData() {
   const timeseries = shallowRef<TimeSeriesPoint[]>([]);
   const units = shallowRef<UnitPerformance[]>([]);
   const products = shallowRef<ProductPerformance[]>([]);
-  const loading = ref(false);
+  const loading = ref(true);
   const ingesting = ref(false);
   const error = ref("");
   const status = ref("");
+  const latestStoredDate = ref<string | null>(null);
 
   const hasResults = computed(() => results.value.length > 0);
+  const hasStoredDataForDate = computed(() => (summary.value?.total_records ?? 0) > 0);
 
   onMounted(initializeDashboard);
   watch([selectedDate, serviceType, auctionUnit, auctionProduct], loadAll);
@@ -44,6 +46,7 @@ export function useDashboardData() {
   async function initializeDashboard() {
     try {
       const latest = await getLatestDate();
+      latestStoredDate.value = latest.date;
       if (latest.date && latest.date !== selectedDate.value) {
         selectedDate.value = latest.date;
         return;
@@ -93,10 +96,14 @@ export function useDashboardData() {
     status.value = "";
     try {
       const run = await ingest(selectedDate.value);
-      status.value = `${run.records_upserted} Habitat records stored for ${run.target_date}.`;
+      latestStoredDate.value = run.target_date;
+      status.value =
+        run.records_upserted > 0
+          ? `Updated ${run.records_upserted} Habitat results for ${run.target_date}.`
+          : `No Habitat accepted results found for ${run.target_date}.`;
       await loadAll();
     } catch (ingestError) {
-      error.value = ingestError instanceof Error ? ingestError.message : "Unable to run ingestion.";
+      error.value = ingestError instanceof Error ? ingestError.message : "Unable to update results.";
     } finally {
       ingesting.value = false;
     }
@@ -106,6 +113,12 @@ export function useDashboardData() {
     serviceType.value = "";
     auctionUnit.value = "";
     auctionProduct.value = "";
+  }
+
+  function selectLatestDate() {
+    if (latestStoredDate.value) {
+      selectedDate.value = latestStoredDate.value;
+    }
   }
 
   return {
@@ -124,9 +137,12 @@ export function useDashboardData() {
     ingesting,
     error,
     status,
+    latestStoredDate,
     hasResults,
+    hasStoredDataForDate,
     loadAll,
     runIngest,
     clearFilters,
+    selectLatestDate,
   };
 }

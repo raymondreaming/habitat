@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Search } from "lucide-vue-next";
 import type { AuctionResult, Options } from "../api";
+import LoadingSpinner from "./LoadingSpinner.vue";
 
 defineProps<{
   results: AuctionResult[];
@@ -23,7 +24,7 @@ const emit = defineEmits<{
 <template>
   <section class="panel">
     <div class="panelHeader">
-      <h2>Raw Results</h2>
+      <h2>Detailed Results</h2>
       <div class="filters">
         <label>
           <span>Service</span>
@@ -67,10 +68,15 @@ const emit = defineEmits<{
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="6">Loading...</td>
+            <td colspan="6">
+              <div class="flex items-center gap-2 py-6 text-sm font-semibold text-slate-500">
+                <LoadingSpinner />
+              Loading detailed results
+              </div>
+            </td>
           </tr>
           <tr v-else-if="!hasResults">
-            <td colspan="6">No stored results for this selection.</td>
+            <td colspan="6">No results for this selection.</td>
           </tr>
           <tr
             v-for="row in results"
