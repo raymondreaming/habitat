@@ -405,6 +405,24 @@ class AuctionResultsRepository:
                 )
                 return [serialize_row(row) for row in cur.fetchall()]
 
+    def get_latest_delivery_date(
+        self,
+        dataset: NesoDataset = HABITAT_AUCTION_RESULTS,
+    ) -> Optional[str]:
+        with database.connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT MAX(delivery_start::date) AS latest_date
+                    FROM auction_results
+                    WHERE source_resource_id = %s
+                    """,
+                    (dataset.resource_id,),
+                )
+                row = cur.fetchone()
+                latest_date = row["latest_date"] if row else None
+                return latest_date.isoformat() if latest_date else None
+
 
 def day_bounds(target_date: date):
     start = datetime.combine(target_date, datetime.min.time())

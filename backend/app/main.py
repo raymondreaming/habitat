@@ -103,6 +103,11 @@ def products_endpoint(date: Optional[str] = Query(default=None)):
     return {"date": target_date.isoformat(), "products": repository.get_products(target_date)}
 
 
+@app.get("/api/latest-date")
+def latest_date_endpoint():
+    return {"date": repository.get_latest_delivery_date()}
+
+
 def parse_date_or_400(value: Optional[str]):
     try:
         return resolve_target_date(value)
