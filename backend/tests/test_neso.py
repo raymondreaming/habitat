@@ -1,19 +1,28 @@
 from datetime import date, datetime
 
-from app.neso import PARTICIPANT, build_habitat_sql, normalize_record
+from app.datasets import HABITAT_AUCTION_RESULTS
+from app.normalizers import normalize_auction_result, normalize_market_service_total
 
 
 def test_build_habitat_sql_uses_validated_date_window():
-    sql = build_habitat_sql(date(2026, 5, 26))
+    sql = HABITAT_AUCTION_RESULTS.build_daily_sql(date(2026, 5, 26))
 
-    assert PARTICIPANT in sql
+    assert HABITAT_AUCTION_RESULTS.participant in sql
     assert "'2026-05-26T00:00:00'" in sql
     assert "'2026-05-27T00:00:00'" in sql
 
 
+def test_build_market_service_totals_sql_groups_market_by_service():
+    sql = HABITAT_AUCTION_RESULTS.build_market_service_totals_sql(date(2026, 5, 26))
+
+    assert "GROUP BY \"serviceType\"" in sql
+    assert "SUM(\"executedQuantity\")" in sql
+    assert "'2026-05-26T00:00:00'" in sql
+
+
 def test_normalize_record_parses_sql_endpoint_numeric_strings():
     row = {
-        "registeredAuctionParticipant": PARTICIPANT,
+        "registeredAuctionParticipant": HABITAT_AUCTION_RESULTS.participant,
         "auctionUnit": "OCHLB-1",
         "serviceType": "Quick Reserve",
         "auctionProduct": "NQR",
@@ -26,9 +35,25 @@ def test_normalize_record_parses_sql_endpoint_numeric_strings():
         "unitResultID": "2730#||#2047#||#NQR#||#168384",
     }
 
-    normalized = normalize_record(row)
+    normalized = normalize_auction_result(row)
 
     assert normalized["unit_result_id"] == "2730#||#2047#||#NQR#||#168384"
     assert normalized["executed_quantity"] == 14.0
     assert normalized["clearing_price"] == 0.27
     assert normalized["delivery_start"] == datetime(2026, 5, 26, 0, 0)
+
+
+def test_normalize_market_service_total_parses_aggregate_strings():
+    row = {
+        "serviceType": "Quick Reserve",
+        "total_records": "2035",
+        "total_executed_quantity": "36450.0",
+        "average_clearing_price": "2.7582063882063882",
+    }
+
+    normalized = normalize_market_service_total(row, date(2026, 5, 26))
+
+    assert normalized["target_date"] == date(2026, 5, 26)
+    assert normalized["service_type"] == "Quick Reserve"
+    assert normalized["total_records"] == 2035
+    assert normalized["total_executed_quantity"] == 36450.0

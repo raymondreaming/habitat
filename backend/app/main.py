@@ -1,21 +1,25 @@
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import db
+from app import database
+from app.auth import require_ingest_api_key
 from app.config import get_config
 from app.dates import resolve_target_date
-from app.ingestion import ingest
+from app.ingestion_service import IngestionService
+from app.repository import AuctionResultsRepository
 
 
 config = get_config()
+repository = AuctionResultsRepository(config.database_url)
+ingestion_service = IngestionService(repository=repository)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db.init_db(config.database_url)
+    database.init_db(config.database_url)
     yield
 
 
@@ -35,10 +39,11 @@ def health():
 
 
 @app.post("/api/ingest")
-def ingest_endpoint(date: Optional[str] = Query(default=None)):
+def ingest_endpoint(request: Request, date: Optional[str] = Query(default=None)):
+    require_ingest_api_key(request, config.ingest_api_key)
     target_date = parse_date_or_400(date)
     try:
-        return ingest(target_date, config.database_url)
+        return ingestion_service.ingest_date(target_date, config.database_url)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -53,12 +58,11 @@ def results_endpoint(
     target_date = parse_date_or_400(date)
     return {
         "date": target_date.isoformat(),
-        "results": db.list_results(
+        "results": repository.list_results(
             target_date=target_date,
             service_type=service_type,
             auction_unit=auction_unit,
             auction_product=auction_product,
-            database_url=config.database_url,
         ),
     }
 
@@ -66,13 +70,37 @@ def results_endpoint(
 @app.get("/api/options")
 def options_endpoint(date: Optional[str] = Query(default=None)):
     target_date = parse_date_or_400(date)
-    return {"date": target_date.isoformat(), **db.get_options(target_date, config.database_url)}
+    return {"date": target_date.isoformat(), **repository.get_options(target_date)}
 
 
 @app.get("/api/summary")
 def summary_endpoint(date: Optional[str] = Query(default=None)):
     target_date = parse_date_or_400(date)
-    return {"date": target_date.isoformat(), **db.get_summary(target_date, config.database_url)}
+    return {"date": target_date.isoformat(), **repository.get_summary(target_date)}
+
+
+@app.get("/api/market-share")
+def market_share_endpoint(date: Optional[str] = Query(default=None)):
+    target_date = parse_date_or_400(date)
+    return {"date": target_date.isoformat(), "market_share": repository.get_market_share(target_date)}
+
+
+@app.get("/api/timeseries")
+def timeseries_endpoint(date: Optional[str] = Query(default=None)):
+    target_date = parse_date_or_400(date)
+    return {"date": target_date.isoformat(), "timeseries": repository.get_timeseries(target_date)}
+
+
+@app.get("/api/units")
+def units_endpoint(date: Optional[str] = Query(default=None)):
+    target_date = parse_date_or_400(date)
+    return {"date": target_date.isoformat(), "units": repository.get_units(target_date)}
+
+
+@app.get("/api/products")
+def products_endpoint(date: Optional[str] = Query(default=None)):
+    target_date = parse_date_or_400(date)
+    return {"date": target_date.isoformat(), "products": repository.get_products(target_date)}
 
 
 def parse_date_or_400(value: Optional[str]):
