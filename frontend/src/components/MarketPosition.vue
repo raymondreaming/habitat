@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { RefreshCw } from "lucide-vue-next";
+import { defineAsyncComponent } from "vue";
 import type { MarketShare } from "../api";
-import MarketShareChart from "./charts/MarketShareChart.vue";
+
+const MarketShareChart = defineAsyncComponent(() => import("./charts/MarketShareChart.vue"));
 
 defineProps<{
   rows: MarketShare[];
@@ -43,7 +45,11 @@ const emit = defineEmits<{
             <tr v-if="!rows.length">
               <td colspan="4">Run ingestion to store market comparison data.</td>
             </tr>
-            <tr v-for="row in rows" :key="row.service_type">
+            <tr
+              v-for="row in rows"
+              :key="row.service_type"
+              v-memo="[row.habitat_executed_quantity, row.market_executed_quantity]"
+            >
               <td>{{ row.service_type }}</td>
               <td>{{ row.habitat_executed_quantity.toFixed(0) }}</td>
               <td>{{ row.market_executed_quantity.toFixed(0) }}</td>

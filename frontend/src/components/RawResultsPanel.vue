@@ -72,7 +72,12 @@ const emit = defineEmits<{
           <tr v-else-if="!hasResults">
             <td colspan="6">No stored results for this selection.</td>
           </tr>
-          <tr v-for="row in results" v-else :key="row.unit_result_id">
+          <tr
+            v-for="row in results"
+            v-else
+            :key="row.unit_result_id"
+            v-memo="[row.executed_quantity, row.clearing_price, row.delivery_start, row.delivery_end]"
+          >
             <td>{{ row.delivery_start.slice(11, 16) }}-{{ row.delivery_end.slice(11, 16) }}</td>
             <td>{{ row.auction_unit }}</td>
             <td>{{ row.service_type }}</td>

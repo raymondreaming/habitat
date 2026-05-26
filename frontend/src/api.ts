@@ -126,6 +126,10 @@ export async function getProducts(date: string): Promise<{ date: string; product
   return request(`/api/products?date=${encodeURIComponent(date)}`);
 }
 
+export async function getLatestDate(): Promise<{ date: string | null }> {
+  return request("/api/latest-date");
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, init);
   const payload = await response.json().catch(() => null);

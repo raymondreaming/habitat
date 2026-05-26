@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { defineAsyncComponent } from "vue";
 import type { ProductPerformance, TimeSeriesPoint, UnitPerformance } from "../api";
-import DeliveryWindowChart from "./charts/DeliveryWindowChart.vue";
-import ProductMixChart from "./charts/ProductMixChart.vue";
-import UnitRevenueChart from "./charts/UnitRevenueChart.vue";
 import TopUnitsLeaderboard from "./TopUnitsLeaderboard.vue";
+
+const DeliveryWindowChart = defineAsyncComponent(() => import("./charts/DeliveryWindowChart.vue"));
+const ProductMixChart = defineAsyncComponent(() => import("./charts/ProductMixChart.vue"));
+const UnitRevenueChart = defineAsyncComponent(() => import("./charts/UnitRevenueChart.vue"));
 
 defineProps<{
   products: ProductPerformance[];
