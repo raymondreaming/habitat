@@ -13,7 +13,11 @@ const topUnits = computed(() => props.units.slice(0, 8));
   <article class="panel leaderboard">
     <h2>Top Units</h2>
     <ol>
-      <li v-for="unit in topUnits" :key="unit.auction_unit">
+      <li
+        v-for="unit in topUnits"
+        :key="unit.auction_unit"
+        v-memo="[unit.executed_quantity, unit.estimated_gross_revenue]"
+      >
         <span>{{ unit.auction_unit }}</span>
         <strong>{{ unit.executed_quantity.toFixed(0) }} MW</strong>
       </li>
