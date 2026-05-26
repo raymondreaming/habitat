@@ -53,6 +53,8 @@ SCHEMA_STATEMENTS = [
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_auction_results_delivery_start ON auction_results (delivery_start)",
+    "CREATE INDEX IF NOT EXISTS idx_auction_results_resource_delivery ON auction_results (source_resource_id, delivery_start)",
+    "CREATE INDEX IF NOT EXISTS idx_auction_results_resource_service_delivery ON auction_results (source_resource_id, service_type, delivery_start)",
     "CREATE INDEX IF NOT EXISTS idx_auction_results_service_type ON auction_results (service_type)",
     "CREATE INDEX IF NOT EXISTS idx_auction_results_auction_unit ON auction_results (auction_unit)",
     "CREATE INDEX IF NOT EXISTS idx_market_service_totals_date ON market_service_totals (target_date)",
