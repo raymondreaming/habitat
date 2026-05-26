@@ -18,8 +18,53 @@ export type Summary = {
   total_records: number;
   total_executed_quantity: number;
   average_clearing_price: number;
+  estimated_gross_revenue: number;
+  active_units: number;
+  top_service_by_volume: { service_type: string; executed_quantity: number } | null;
+  top_unit_by_volume: { auction_unit: string; executed_quantity: number } | null;
   by_service_type: Array<{ service_type: string; executed_quantity: number }>;
   by_auction_unit: Array<{ auction_unit: string; executed_quantity: number }>;
+};
+
+export type MarketShare = {
+  service_type: string;
+  habitat_records: number;
+  market_records: number;
+  habitat_executed_quantity: number;
+  market_executed_quantity: number;
+  habitat_market_share_percent: number;
+  habitat_average_clearing_price: number;
+  market_average_clearing_price: number;
+};
+
+export type TimeSeriesPoint = {
+  delivery_start: string;
+  delivery_end: string;
+  service_type: string;
+  auction_product: string;
+  total_records: number;
+  executed_quantity: number;
+  average_clearing_price: number;
+  estimated_gross_revenue: number;
+};
+
+export type UnitPerformance = {
+  auction_unit: string;
+  total_records: number;
+  executed_quantity: number;
+  average_clearing_price: number;
+  estimated_gross_revenue: number;
+  service_types: string[];
+  auction_products: string[];
+};
+
+export type ProductPerformance = {
+  service_type: string;
+  auction_product: string;
+  total_records: number;
+  executed_quantity: number;
+  average_clearing_price: number;
+  estimated_gross_revenue: number;
 };
 
 export type Options = {
@@ -63,6 +108,22 @@ export async function getSummary(date: string): Promise<Summary> {
 
 export async function getOptions(date: string): Promise<Options> {
   return request<Options>(`/api/options?date=${encodeURIComponent(date)}`);
+}
+
+export async function getMarketShare(date: string): Promise<{ date: string; market_share: MarketShare[] }> {
+  return request(`/api/market-share?date=${encodeURIComponent(date)}`);
+}
+
+export async function getTimeseries(date: string): Promise<{ date: string; timeseries: TimeSeriesPoint[] }> {
+  return request(`/api/timeseries?date=${encodeURIComponent(date)}`);
+}
+
+export async function getUnits(date: string): Promise<{ date: string; units: UnitPerformance[] }> {
+  return request(`/api/units?date=${encodeURIComponent(date)}`);
+}
+
+export async function getProducts(date: string): Promise<{ date: string; products: ProductPerformance[] }> {
+  return request(`/api/products?date=${encodeURIComponent(date)}`);
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
