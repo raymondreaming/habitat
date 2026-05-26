@@ -49,7 +49,7 @@ button.secondary {
 
 .shell {
   margin: 0 auto;
-  max-width: 1180px;
+  max-width: 1280px;
   padding: 32px 20px 48px;
 }
 
@@ -83,6 +83,7 @@ h1 {
 
 h2 {
   font-size: 20px;
+  margin-bottom: 14px;
 }
 
 .actions,
@@ -118,7 +119,7 @@ select {
 .metrics {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin-bottom: 18px;
 }
 
@@ -133,22 +134,26 @@ select {
 .metrics article {
   display: grid;
   gap: 8px;
+  min-height: 112px;
   padding: 18px;
 }
 
 .metrics span {
   color: #52645c;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .metrics strong {
-  font-size: 30px;
-  line-height: 1;
+  align-self: end;
+  font-size: 28px;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
 }
 
 .panel {
+  margin-bottom: 18px;
   padding: 18px;
 }
 
@@ -171,25 +176,36 @@ select {
   border: 1px solid #fecdd3;
   border-radius: 6px;
   color: #be123c;
-  margin-top: 14px;
+  margin-bottom: 14px;
   padding: 10px 12px;
 }
 
-.contentGrid {
+.marketGrid,
+.analysisGrid {
   display: grid;
   gap: 18px;
-  grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.25fr);
-  margin-top: 18px;
+}
+
+.marketGrid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+}
+
+.analysisGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .chartBox {
-  border: 1px solid #e1e8e4;
-  border-radius: 8px;
-  height: 340px;
-  padding: 16px;
+  height: 360px;
+  min-width: 0;
+  width: 100%;
 }
 
-.tableWrap {
+.chartBox.compact {
+  height: 320px;
+}
+
+.tableWrap,
+.shareTable {
   border: 1px solid #e1e8e4;
   border-radius: 8px;
   overflow: auto;
@@ -199,6 +215,10 @@ table {
   border-collapse: collapse;
   min-width: 720px;
   width: 100%;
+}
+
+.shareTable table {
+  min-width: 520px;
 }
 
 th,
@@ -220,15 +240,51 @@ td {
   font-size: 14px;
 }
 
-@media (max-width: 820px) {
+.leaderboard ol {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.leaderboard li {
+  align-items: center;
+  background: #f8faf9;
+  border: 1px solid #edf1ef;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.leaderboard span {
+  font-weight: 800;
+}
+
+.leaderboard strong {
+  color: #0f766e;
+}
+
+@media (max-width: 1100px) {
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .marketGrid,
+  .analysisGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
   .topbar,
   .panelHeader {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .metrics,
-  .contentGrid {
+  .metrics {
     grid-template-columns: 1fr;
   }
 
