@@ -34,6 +34,27 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border: 2px solid var(--bg);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.26);
 }
 
 html {
@@ -121,7 +142,7 @@ button.secondary:hover {
 .brandLogo svg {
   display: block;
   fill: currentColor;
-  height: 38px;
+  height: 34px;
   width: auto;
 }
 
@@ -161,7 +182,7 @@ h2 {
   display: flex;
   height: 64px;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 20px 0 18px;
   position: fixed;
   left: 0;
   right: 0;
@@ -172,7 +193,7 @@ h2 {
 .appHeader__left {
   align-items: center;
   display: flex;
-  gap: 18px;
+  gap: 20px;
   min-width: 0;
 }
 
@@ -188,6 +209,49 @@ h2 {
   height: 44px;
   justify-content: center;
   width: 44px;
+}
+
+.appHeader__right {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.headerControls {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.appHeader .appDatePicker {
+  gap: 0;
+}
+
+.appHeader .appDatePicker__label {
+  display: none;
+}
+
+.headerLatestButton,
+.headerUpdateButton {
+  min-height: 32px;
+}
+
+.headerUpdateButton {
+  justify-content: center;
+  min-width: 94px;
+}
+
+.headerStatus {
+  color: var(--success);
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 220px;
 }
 
 .topBreadcrumbs {
@@ -223,29 +287,34 @@ h2 {
   bottom: 0;
   display: none;
   left: 0;
-  overflow-y: auto;
   position: fixed;
   top: 64px;
-  width: 256px;
+  width: 64px;
   z-index: 30;
 }
 
-.navItem,
-.lockedNavItem {
-  align-items: center;
-  border-radius: 6px;
+.sidebarNav {
   display: flex;
-  gap: 12px;
-  min-height: 40px;
-  padding: 8px 12px;
-  text-align: left;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 12px 10px;
 }
 
 .navItem {
-  color: var(--text);
-  font-size: 16px;
-  font-weight: 400;
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.58);
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0;
   text-decoration: none;
+  width: 44px;
 }
 
 .navItem--active {
@@ -254,22 +323,13 @@ h2 {
   color: var(--text);
 }
 
-.navSection {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  margin-top: 12px;
-  padding-top: 8px;
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
 }
 
-.lockedNavItem {
-  background: transparent;
-  box-shadow: none;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 14px;
-  font-weight: 400;
-  justify-content: space-between;
-  margin-top: 4px;
-  min-height: 40px;
-  width: 100%;
+.navItem--bottom {
+  margin-top: auto;
 }
 
 .tickerRail {
@@ -333,35 +393,42 @@ h2 {
 }
 
 .tickerRail__units {
-  margin-top: 26px;
+  margin-bottom: 26px;
 }
 
 .tickerRail__units ol {
   display: grid;
-  gap: 14px;
+  gap: 13px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .railUnit {
+  align-items: start;
+  column-gap: 10px;
   display: grid;
-  gap: 4px;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 62px minmax(0, 1fr);
+  row-gap: 2px;
 }
 
 .railUnit span {
   color: var(--mid-gray);
   font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", "Courier New", monospace;
-  font-size: 11px;
-  grid-row: span 2;
-  padding-top: 2px;
+  font-size: 10px;
+  grid-column: 1;
+  grid-row: 1;
+  line-height: 12px;
+  padding-top: 1px;
 }
 
 .railUnit strong {
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -370,10 +437,23 @@ h2 {
 .railUnit small {
   color: var(--mid-gray);
   font-size: 12px;
+  grid-column: 2;
+  grid-row: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.railUnit__sparkline.sparkline {
+  grid-column: 1;
+  grid-row: 2;
+  height: 18px;
+  width: 62px;
 }
 
 .railUnit--loading strong i,
-.railUnit--loading small i {
+.railUnit--loading small i,
+.railUnit--loading em {
   animation: pulse 1.7s ease-in-out infinite;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
@@ -387,7 +467,14 @@ h2 {
 
 .railUnit--loading small i {
   height: 11px;
-  width: 118px;
+  width: 96px;
+}
+
+.railUnit--loading em {
+  grid-column: 1;
+  grid-row: 2;
+  height: 18px;
+  width: 62px;
 }
 
 .tickerItem--loading span,
@@ -502,7 +589,7 @@ h2 {
   border-bottom: 1px solid var(--border-soft);
   display: grid;
   gap: 24px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   margin-bottom: 24px;
   padding: 4px 0 24px;
 }
@@ -543,11 +630,19 @@ h2 {
   gap: 6px;
 }
 
-.commandBar__update span {
+.commandBar__update button {
+  justify-content: center;
+  min-width: 150px;
+}
+
+.commandBar__status {
   color: var(--success);
   font-size: 12px;
   font-weight: 400;
+  line-height: 16px;
   max-width: 260px;
+  min-height: 16px;
+  text-align: right;
 }
 
 .primaryButton,
@@ -589,8 +684,9 @@ h2 {
   border-bottom: 1px solid var(--border-soft);
   border-top: 1px solid var(--border-soft);
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
   margin-bottom: 24px;
+  overflow-x: auto;
 }
 
 .summaryTicker {
@@ -610,21 +706,28 @@ h2 {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .summaryTicker strong {
   color: var(--text);
+  display: block;
   font-size: clamp(18px, 1.7vw, 24px);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   line-height: 1;
+  min-height: 24px;
   overflow-wrap: normal;
+  white-space: nowrap;
   word-break: normal;
 }
 
 .summaryTicker small {
   color: var(--muted-text);
+  display: block;
   font-size: 12px;
+  min-height: 16px;
+  white-space: nowrap;
 }
 
 .summaryTicker--loading strong i,
@@ -650,6 +753,26 @@ h2 {
 .insightCell--loading span i {
   height: 12px;
   width: 96px;
+}
+
+.summaryTicker:nth-child(1) strong i {
+  width: 58px;
+}
+
+.summaryTicker:nth-child(2) strong i {
+  width: 92px;
+}
+
+.summaryTicker:nth-child(3) strong i {
+  width: 64px;
+}
+
+.summaryTicker:nth-child(4) strong i {
+  width: 34px;
+}
+
+.summaryTicker:nth-child(5) strong i {
+  width: 118px;
 }
 
 .summaryBoard {
@@ -679,6 +802,7 @@ h2 {
   font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .summaryBoard__primary strong {
@@ -750,7 +874,8 @@ h2 {
 
 .insightRail__items {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  overflow-x: auto;
 }
 
 .insightCell {
@@ -771,7 +896,13 @@ h2 {
   font-weight: 700;
   line-height: 1.15;
   margin-top: 12px;
+  min-height: 24px;
   overflow-wrap: anywhere;
+}
+
+.insightCell span {
+  display: block;
+  min-height: 18px;
 }
 
 .emptyState {
@@ -832,6 +963,14 @@ h2 {
   font-weight: 600;
   line-height: 14px;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sectionHeader p {
+  color: var(--muted-text);
+  font-size: 13px;
+  line-height: 18px;
+  margin-top: 6px;
 }
 
 .headerWithIcon {
@@ -842,6 +981,27 @@ h2 {
 
 .sectionHeader--filters {
   align-items: end;
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(660px, auto);
+}
+
+.sectionHeader--compact {
+  border-bottom: 0;
+  min-height: auto;
+  padding: 0 0 12px;
+}
+
+.auditHeading {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.auditHeading p {
+  color: var(--muted-text);
+  font-size: 13px;
+  line-height: 18px;
+  max-width: 520px;
 }
 
 .analysisDeck {
@@ -850,12 +1010,350 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.analysisLensSection {
+  margin-bottom: 32px;
+}
+
+.analysisLensHeader {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  min-height: 64px;
+  padding: 12px 0;
+}
+
+.analysisLensHeader h2 {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.analysisLensHeader span {
+  color: var(--mid-gray);
+  display: block;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.chartModeSwitcher {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  display: flex;
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 3px;
+}
+
+button.chartModeButton {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--mid-gray);
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 6px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+button.chartModeButton:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+button.chartModeButton--active {
+  background: var(--button-surface);
+  color: #000000;
+}
+
+button.chartModeButton--active:hover {
+  background: #d9d9d9;
+  color: #000000;
+}
+
 .actions,
 .filters {
   align-items: end;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.sectionHeader--filters .filters {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.filterClearButton {
+  justify-content: center;
+  min-width: 108px;
+}
+
+.appSelect {
+  display: grid;
+  gap: 6px;
+  min-width: 170px;
+  position: relative;
+}
+
+.appSelect__label {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+button.appSelect__trigger {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--text);
+  display: flex;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 10px;
+  height: 36px;
+  justify-content: space-between;
+  min-height: 36px;
+  min-width: 170px;
+  padding: 0 10px 0 12px;
+  width: 100%;
+}
+
+button.appSelect__trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.appSelect__trigger svg {
+  color: var(--mid-gray);
+  flex: 0 0 auto;
+  transition: transform 160ms ease;
+}
+
+.appSelect--open button.appSelect__trigger {
+  background: rgba(71, 159, 250, 0.05);
+  border-color: rgba(71, 159, 250, 0.5);
+}
+
+.appSelect--open button.appSelect__trigger svg {
+  transform: rotate(180deg);
+}
+
+.appSelect--selected button.appSelect__trigger {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.appSelect__menu {
+  background: rgba(11, 11, 11, 0.98);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, 0.45) 0 12px 28px;
+  display: grid;
+  left: 0;
+  max-height: 260px;
+  min-width: 100%;
+  overflow-y: auto;
+  padding: 6px;
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 80;
+}
+
+button.appSelect__option {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--muted-text);
+  display: flex;
+  font-size: 13px;
+  font-weight: 500;
+  height: 32px;
+  justify-content: space-between;
+  min-height: 32px;
+  padding: 0 8px;
+  text-align: left;
+  width: 100%;
+}
+
+button.appSelect__option span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.appSelect__option:hover,
+button.appSelect__option--active {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+button.appSelect__option svg {
+  color: var(--active-blue);
+  flex: 0 0 auto;
+}
+
+.appSelect__empty {
+  color: var(--mid-gray);
+  font-size: 12px;
+  padding: 8px;
+}
+
+.appDatePicker {
+  display: grid;
+  gap: 6px;
+  min-width: 156px;
+  position: relative;
+}
+
+.appDatePicker__label {
+  color: var(--mid-gray);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+button.appDatePicker__trigger {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--text);
+  display: flex;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 8px;
+  height: 32px;
+  justify-content: space-between;
+  min-height: 32px;
+  min-width: 156px;
+  padding: 0 10px;
+}
+
+button.appDatePicker__trigger svg {
+  color: var(--mid-gray);
+  flex: 0 0 auto;
+}
+
+.appDatePicker--open button.appDatePicker__trigger {
+  background: rgba(71, 159, 250, 0.05);
+  border-color: rgba(71, 159, 250, 0.5);
+}
+
+.appDatePicker--open button.appDatePicker__trigger svg:last-child {
+  transform: rotate(180deg);
+}
+
+.appDatePicker__popover {
+  background: rgba(11, 11, 11, 0.98);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.5) 0 18px 40px;
+  padding: 10px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 292px;
+  z-index: 90;
+}
+
+.appDatePicker__month {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  margin-bottom: 8px;
+}
+
+.appDatePicker__month strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.appDatePicker__month button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--mid-gray);
+  height: 32px;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0;
+  width: 32px;
+}
+
+.appDatePicker__month button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-soft);
+  color: var(--text);
+}
+
+.appDatePicker__weekdays,
+.appDatePicker__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.appDatePicker__weekdays span {
+  color: var(--mid-gray);
+  font-size: 11px;
+  font-weight: 600;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+}
+
+button.appDatePicker__day {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  box-shadow: none;
+  color: var(--muted-text);
+  font-size: 13px;
+  font-weight: 500;
+  height: 36px;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0;
+  width: 36px;
+}
+
+button.appDatePicker__day:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+button.appDatePicker__day--outside {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+button.appDatePicker__day--today {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+button.appDatePicker__day--selected {
+  background: var(--button-surface);
+  color: #000000;
+}
+
+button.appDatePicker__day--selected:hover {
+  background: #d9d9d9;
+  color: #000000;
 }
 
 label {
@@ -958,8 +1456,23 @@ select:focus {
 }
 
 .marketGrid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(380px, 0.8fr);
   padding: 20px;
+}
+
+.marketSideStack {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.marketSidePanel {
+  min-width: 0;
+}
+
+.marketSidePanel .chartBox.compact,
+.marketSidePanel .chartSkeleton {
+  height: 260px;
 }
 
 .analysisGrid {
@@ -981,6 +1494,11 @@ select:focus {
 .shareTable {
   border: 1px solid var(--border);
   overflow: auto;
+}
+
+.shareTable--full {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
 }
 
 .tableWrap {
@@ -1075,6 +1593,16 @@ table {
 
 .shareTable table {
   min-width: 760px;
+}
+
+.shareTable th:not(:first-child),
+.shareTable td:not(:first-child) {
+  text-align: right;
+}
+
+.shareTable td:first-child {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .marketInterpretation {
@@ -1311,6 +1839,18 @@ td {
   }
 }
 
+@media (max-width: 1240px) {
+  .headerStatus {
+    display: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .topBreadcrumbs {
+    display: none;
+  }
+}
+
 @media (max-width: 1100px) {
   .metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1353,11 +1893,38 @@ td {
 
 @media (max-width: 760px) {
   .appHeader {
-    padding: 0 16px;
+    padding: 0 12px;
   }
 
-  .topBreadcrumbs {
+  .appDatePicker__label,
+  .headerLatestButton {
     display: none;
+  }
+
+  .appHeader__left {
+    gap: 12px;
+  }
+
+  .appHeader__right,
+  .headerControls {
+    gap: 6px;
+  }
+
+  .appDatePicker,
+  button.appDatePicker__trigger {
+    min-width: 122px;
+  }
+
+  .appDatePicker__popover {
+    position: fixed;
+    right: 12px;
+    top: 58px;
+    width: 296px;
+  }
+
+  .headerUpdateButton {
+    min-width: 78px;
+    padding: 0 10px;
   }
 
   .shell {
@@ -1374,6 +1941,15 @@ td {
   .emptyState {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .sectionHeader--filters {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader--filters .filters {
+    flex-wrap: wrap;
+    justify-content: stretch;
   }
 
   .commandBar__actions,

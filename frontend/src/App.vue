@@ -3,6 +3,7 @@ import AnalysisSection from "./components/AnalysisSection.vue";
 import AppHeader from "./components/AppHeader.vue";
 import AppSidebar from "./components/AppSidebar.vue";
 import InsightStrip from "./components/InsightStrip.vue";
+import MarketComparisonTable from "./components/MarketComparisonTable.vue";
 import MarketPosition from "./components/MarketPosition.vue";
 import NoDataPanel from "./components/NoDataPanel.vue";
 import PageToolbar from "./components/PageToolbar.vue";
@@ -16,7 +17,15 @@ const dashboard = useDashboardData();
 
 <template>
   <main class="min-h-screen bg-[#0B0B0B]">
-    <AppHeader />
+    <AppHeader
+      :ingesting="dashboard.ingesting.value"
+      :latest-date="dashboard.latestStoredDate.value"
+      :selected-date="dashboard.selectedDate.value"
+      :status="dashboard.status.value"
+      @ingest="dashboard.runIngest"
+      @select-latest="dashboard.selectLatestDate"
+      @update:selected-date="dashboard.selectedDate.value = $event"
+    />
 
     <div class="min-h-screen pt-16">
       <AppSidebar />
@@ -24,21 +33,14 @@ const dashboard = useDashboardData();
         :loading="dashboard.loading.value"
         :market-share="dashboard.marketShare.value"
         :products="dashboard.products.value"
+        :results="dashboard.allResults.value"
         :summary="dashboard.summary.value"
         :units="dashboard.units.value"
       />
 
-      <div class="min-w-0 lg:pl-64 2xl:pr-80">
+      <div class="min-w-0 lg:pl-16 2xl:pr-80">
         <div class="shell">
-          <PageToolbar
-            :ingesting="dashboard.ingesting.value"
-            :latest-date="dashboard.latestStoredDate.value"
-            :selected-date="dashboard.selectedDate.value"
-            :status="dashboard.status.value"
-            @ingest="dashboard.runIngest"
-            @select-latest="dashboard.selectLatestDate"
-            @update:selected-date="dashboard.selectedDate.value = $event"
-          />
+          <PageToolbar />
 
           <SummaryTickerStrip :loading="dashboard.loading.value" :summary="dashboard.summary.value" />
 
@@ -47,6 +49,7 @@ const dashboard = useDashboardData();
             :loading="dashboard.loading.value"
             :rows="dashboard.marketShare.value"
             :status="dashboard.status.value"
+            :units="dashboard.units.value"
             @refresh="dashboard.loadAll"
           />
 
@@ -72,14 +75,16 @@ const dashboard = useDashboardData();
             :loading="dashboard.loading.value"
             :products="dashboard.products.value"
             :timeseries="dashboard.timeseries.value"
-            :units="dashboard.units.value"
           />
+
+          <MarketComparisonTable :loading="dashboard.loading.value" :rows="dashboard.marketShare.value" />
 
           <RawResultsPanel
             :auction-product="dashboard.auctionProduct.value"
             :auction-unit="dashboard.auctionUnit.value"
             :has-results="dashboard.hasResults.value"
             :loading="dashboard.loading.value"
+            :market-note="dashboard.marketInterpretation.value"
             :options="dashboard.options.value"
             :results="dashboard.results.value"
             :service-type="dashboard.serviceType.value"

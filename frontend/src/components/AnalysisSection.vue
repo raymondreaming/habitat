@@ -1,42 +1,56 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from "vue";
-import type { ProductPerformance, TimeSeriesPoint, UnitPerformance } from "../api";
+import { computed, defineAsyncComponent, ref } from "vue";
+import type { ProductPerformance, TimeSeriesPoint } from "../api";
+import { ANALYSIS_CHART_MODES, type AnalysisChartMode } from "../chartModes";
+import ChartModeSwitcher from "./ChartModeSwitcher.vue";
 import ChartSkeleton from "./ChartSkeleton.vue";
 
 const DeliveryWindowChart = defineAsyncComponent(() => import("./charts/DeliveryWindowChart.vue"));
 const ProductMixChart = defineAsyncComponent(() => import("./charts/ProductMixChart.vue"));
-const UnitRevenueChart = defineAsyncComponent(() => import("./charts/UnitRevenueChart.vue"));
 
 defineProps<{
   products: ProductPerformance[];
   timeseries: TimeSeriesPoint[];
-  units: UnitPerformance[];
   loading: boolean;
 }>();
+
+const chartMode = ref<AnalysisChartMode>("volume");
+const activeMode = computed(
+  () => ANALYSIS_CHART_MODES.find((mode) => mode.id === chartMode.value) ?? ANALYSIS_CHART_MODES[0],
+);
+
+function updateChartMode(value: string) {
+  if (value === "volume" || value === "price" || value === "value") {
+    chartMode.value = value;
+  }
+}
 </script>
 
 <template>
-  <section class="analysisDeck">
-    <article class="workspaceSection">
-      <div class="sectionHeader">
-        <h2>Product Mix</h2>
+  <section class="analysisLensSection">
+    <div class="analysisLensHeader">
+      <div>
+        <h2>Analysis Lens</h2>
+        <span>{{ activeMode.metricLabel }}</span>
       </div>
-      <ChartSkeleton v-if="loading" />
-      <ProductMixChart v-else :rows="products" />
-    </article>
-    <article class="workspaceSection">
-      <div class="sectionHeader">
-        <h2>Delivery Windows</h2>
-      </div>
-      <ChartSkeleton v-if="loading" />
-      <DeliveryWindowChart v-else :rows="timeseries" />
-    </article>
-    <article class="workspaceSection">
-      <div class="sectionHeader">
-        <h2>Asset Revenue</h2>
-      </div>
-      <ChartSkeleton v-if="loading" />
-      <UnitRevenueChart v-else :rows="units" />
-    </article>
+      <ChartModeSwitcher :model-value="chartMode" :modes="ANALYSIS_CHART_MODES" @update:model-value="updateChartMode" />
+    </div>
+
+    <div class="analysisDeck">
+      <article class="workspaceSection">
+        <div class="sectionHeader">
+          <h2>Product Mix</h2>
+        </div>
+        <ChartSkeleton v-if="loading" />
+        <ProductMixChart v-else :mode="chartMode" :rows="products" />
+      </article>
+      <article class="workspaceSection">
+        <div class="sectionHeader">
+          <h2>Delivery Windows</h2>
+        </div>
+        <ChartSkeleton v-if="loading" />
+        <DeliveryWindowChart v-else :mode="chartMode" :rows="timeseries" />
+      </article>
+    </div>
   </section>
 </template>
