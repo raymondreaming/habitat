@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -15,11 +16,15 @@ from app.repository import AuctionResultsRepository
 config = get_config()
 repository = AuctionResultsRepository(config.database_url)
 ingestion_service = IngestionService(repository=repository)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    database.init_db(config.database_url)
+    try:
+        database.init_db(config.database_url)
+    except Exception:
+        logger.exception("Database initialization failed during startup")
     yield
 
 
