@@ -1,11 +1,13 @@
 from datetime import date, datetime
+from pathlib import Path
 
 from app.datasets import HABITAT_AUCTION_RESULTS
+from app.neso_queries import build_daily_dataset_sql, build_market_totals_sql
 from app.normalizers import normalize_auction_result, normalize_market_service_total
 
 
 def test_build_habitat_sql_uses_validated_date_window():
-    sql = HABITAT_AUCTION_RESULTS.build_daily_sql(date(2026, 5, 26))
+    sql = build_daily_dataset_sql(HABITAT_AUCTION_RESULTS, date(2026, 5, 26))
 
     assert HABITAT_AUCTION_RESULTS.participant in sql
     assert "'2026-05-26T00:00:00'" in sql
@@ -13,7 +15,7 @@ def test_build_habitat_sql_uses_validated_date_window():
 
 
 def test_build_market_service_totals_sql_groups_market_by_service():
-    sql = HABITAT_AUCTION_RESULTS.build_market_service_totals_sql(date(2026, 5, 26))
+    sql = build_market_totals_sql(HABITAT_AUCTION_RESULTS, date(2026, 5, 26))
 
     assert "GROUP BY \"serviceType\"" in sql
     assert "SUM(\"executedQuantity\")" in sql
@@ -57,3 +59,20 @@ def test_normalize_market_service_total_parses_aggregate_strings():
     assert normalized["service_type"] == "Quick Reserve"
     assert normalized["total_records"] == 2035
     assert normalized["total_executed_quantity"] == 36450.0
+
+
+def test_frontend_does_not_reference_neso_api():
+    repo_root = Path(__file__).resolve().parents[2]
+    frontend_files = repo_root.joinpath("frontend", "src").rglob("*")
+    source_text = "\n".join(path.read_text() for path in frontend_files if path.is_file())
+
+    assert "api.neso.energy" not in source_text
+    assert "datastore_search" not in source_text
+
+
+def test_repository_reads_do_not_import_neso_client():
+    repo_root = Path(__file__).resolve().parents[2]
+    repository_source = repo_root.joinpath("backend", "app", "repository.py").read_text()
+
+    assert "NesoClient" not in repository_source
+    assert "neso_client" not in repository_source

@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "preview": "node server.js",
-    "start": "node server.js"
+    "preview": "bun server.js",
+    "start": "bun server.js"
   },
   "dependencies": {
     "@tanstack/vue-virtual": "^3.13.26",

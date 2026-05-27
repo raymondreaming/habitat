@@ -5,6 +5,7 @@ from psycopg.types.json import Jsonb
 
 from app import database
 from app.datasets import HABITAT_AUCTION_RESULTS, NesoDataset
+from app.revenue import coalesced_sum_gross_revenue_sql, sum_gross_revenue_sql
 
 
 class AuctionResultsRepository:
@@ -217,12 +218,12 @@ class AuctionResultsRepository:
         with database.connect(self.database_url) as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    """
+                    f"""
                     SELECT
                       COUNT(*)::int AS total_records,
                       COALESCE(SUM(executed_quantity), 0)::float AS total_executed_quantity,
                       COALESCE(AVG(clearing_price), 0)::float AS average_clearing_price,
-                      COALESCE(SUM(executed_quantity * clearing_price * EXTRACT(EPOCH FROM (delivery_end - delivery_start)) / 3600.0), 0)::float AS estimated_gross_revenue,
+                      {coalesced_sum_gross_revenue_sql()} AS estimated_gross_revenue,
                       COUNT(DISTINCT auction_unit)::int AS active_units
                     FROM auction_results
                     WHERE source_resource_id = %s
@@ -327,7 +328,7 @@ class AuctionResultsRepository:
         with database.connect(self.database_url) as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    """
+                    f"""
                     SELECT
                       delivery_start,
                       delivery_end,
@@ -336,7 +337,7 @@ class AuctionResultsRepository:
                       COUNT(*)::int AS total_records,
                       SUM(executed_quantity)::float AS executed_quantity,
                       AVG(clearing_price)::float AS average_clearing_price,
-                      SUM(executed_quantity * clearing_price * EXTRACT(EPOCH FROM (delivery_end - delivery_start)) / 3600.0)::float AS estimated_gross_revenue
+                      {sum_gross_revenue_sql()} AS estimated_gross_revenue
                     FROM auction_results
                     WHERE source_resource_id = %s
                       AND delivery_start >= %s
@@ -357,13 +358,13 @@ class AuctionResultsRepository:
         with database.connect(self.database_url) as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    """
+                    f"""
                     SELECT
                       auction_unit,
                       COUNT(*)::int AS total_records,
                       SUM(executed_quantity)::float AS executed_quantity,
                       AVG(clearing_price)::float AS average_clearing_price,
-                      SUM(executed_quantity * clearing_price * EXTRACT(EPOCH FROM (delivery_end - delivery_start)) / 3600.0)::float AS estimated_gross_revenue,
+                      {sum_gross_revenue_sql()} AS estimated_gross_revenue,
                       array_remove(array_agg(DISTINCT service_type ORDER BY service_type), NULL) AS service_types,
                       array_remove(array_agg(DISTINCT auction_product ORDER BY auction_product), NULL) AS auction_products
                     FROM auction_results
@@ -386,14 +387,14 @@ class AuctionResultsRepository:
         with database.connect(self.database_url) as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    """
+                    f"""
                     SELECT
                       service_type,
                       auction_product,
                       COUNT(*)::int AS total_records,
                       SUM(executed_quantity)::float AS executed_quantity,
                       AVG(clearing_price)::float AS average_clearing_price,
-                      SUM(executed_quantity * clearing_price * EXTRACT(EPOCH FROM (delivery_end - delivery_start)) / 3600.0)::float AS estimated_gross_revenue
+                      {sum_gross_revenue_sql()} AS estimated_gross_revenue
                     FROM auction_results
                     WHERE source_resource_id = %s
                       AND delivery_start >= %s
