@@ -423,6 +423,24 @@ class AuctionResultsRepository:
                 latest_date = row["latest_date"] if row else None
                 return latest_date.isoformat() if latest_date else None
 
+    def list_delivery_dates(
+        self,
+        dataset: NesoDataset = HABITAT_AUCTION_RESULTS,
+    ) -> List[str]:
+        with database.connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT delivery_start::date AS delivery_date
+                    FROM auction_results
+                    WHERE source_resource_id = %s
+                    GROUP BY delivery_start::date
+                    ORDER BY delivery_start::date DESC
+                    """,
+                    (dataset.resource_id,),
+                )
+                return [row["delivery_date"].isoformat() for row in cur.fetchall()]
+
 
 def day_bounds(target_date: date):
     start = datetime.combine(target_date, datetime.min.time())
