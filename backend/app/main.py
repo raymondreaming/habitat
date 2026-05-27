@@ -108,6 +108,11 @@ def latest_date_endpoint():
     return {"date": repository.get_latest_delivery_date()}
 
 
+@app.get("/api/dates")
+def dates_endpoint():
+    return {"dates": repository.list_delivery_dates()}
+
+
 def parse_date_or_400(value: Optional[str]):
     try:
         return resolve_target_date(value)

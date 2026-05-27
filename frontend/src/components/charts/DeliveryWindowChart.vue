@@ -8,6 +8,16 @@ const props = defineProps<{
 }>();
 
 const { chartEl, setOption } = useEChart();
+const axisStyle = {
+  axisLabel: { color: "#868F97" },
+  axisLine: { lineStyle: { color: "rgba(255, 255, 255, 0.1)" } },
+  splitLine: { lineStyle: { color: "rgba(255, 255, 255, 0.06)" } },
+};
+const tooltipStyle = {
+  backgroundColor: "rgba(0, 0, 0, 0.85)",
+  borderColor: "rgba(255, 255, 255, 0.1)",
+  textStyle: { color: "#FFFFFF" },
+};
 
 onMounted(render);
 watch(
@@ -20,15 +30,18 @@ function render() {
   const labels = Array.from(new Set(props.rows.map((row) => row.delivery_start.slice(11, 16))));
   const services = Array.from(new Set(props.rows.map((row) => row.service_type)));
   setOption({
-    tooltip: { trigger: "axis" },
-    legend: { top: 0 },
+    color: ["#479FFA", "#868F97", "#E6E6E6", "#404044"],
+    textStyle: { color: "#E6E6E6" },
+    tooltip: { ...tooltipStyle, trigger: "axis" },
+    legend: { top: 0, textStyle: { color: "#E6E6E6" } },
     grid: { left: 48, right: 18, bottom: 32, top: 42 },
-    xAxis: { type: "category", data: labels },
-    yAxis: { type: "value", name: "MW" },
+    xAxis: { ...axisStyle, type: "category", data: labels },
+    yAxis: { ...axisStyle, type: "value", name: "MW" },
     series: services.map((service) => ({
       name: service,
       type: "bar",
       stack: "volume",
+      itemStyle: { borderRadius: [3, 3, 0, 0] },
       data: labels.map((label) =>
         props.rows
           .filter((row) => row.delivery_start.slice(11, 16) === label && row.service_type === service)

@@ -25,18 +25,21 @@ export function useDashboardData() {
   const auctionUnit = ref("");
   const auctionProduct = ref("");
   const results = shallowRef<AuctionResult[]>([]);
+  const allResults = shallowRef<AuctionResult[]>([]);
   const summary = shallowRef<Summary | null>(null);
   const options = shallowRef<Options | null>(null);
   const marketShare = shallowRef<MarketShare[]>([]);
   const timeseries = shallowRef<TimeSeriesPoint[]>([]);
   const units = shallowRef<UnitPerformance[]>([]);
   const products = shallowRef<ProductPerformance[]>([]);
-  const loading = ref(false);
+  const loading = ref(true);
   const ingesting = ref(false);
   const error = ref("");
   const status = ref("");
+  const latestStoredDate = ref<string | null>(null);
 
   const hasResults = computed(() => results.value.length > 0);
+  const hasStoredDataForDate = computed(() => (summary.value?.total_records ?? 0) > 0);
 
   onMounted(initializeDashboard);
   watch([selectedDate, serviceType, auctionUnit, auctionProduct], loadAll);
@@ -44,6 +47,7 @@ export function useDashboardData() {
   async function initializeDashboard() {
     try {
       const latest = await getLatestDate();
+      latestStoredDate.value = latest.date;
       if (latest.date && latest.date !== selectedDate.value) {
         selectedDate.value = latest.date;
         return;
@@ -58,23 +62,38 @@ export function useDashboardData() {
     loading.value = true;
     error.value = "";
     try {
-      const [nextSummary, nextOptions, nextResults, nextMarketShare, nextTimeseries, nextUnits, nextProducts] =
-        await Promise.all([
-          getSummary(selectedDate.value),
-          getOptions(selectedDate.value),
-          getResults({
+      const hasFilters = Boolean(serviceType.value || auctionUnit.value || auctionProduct.value);
+      const baseResultsRequest = getResults({ date: selectedDate.value });
+      const filteredResultsRequest = hasFilters
+        ? getResults({
             date: selectedDate.value,
             serviceType: serviceType.value,
             auctionUnit: auctionUnit.value,
             auctionProduct: auctionProduct.value,
-          }),
-          getMarketShare(selectedDate.value),
-          getTimeseries(selectedDate.value),
-          getUnits(selectedDate.value),
-          getProducts(selectedDate.value),
-        ]);
+          })
+        : baseResultsRequest;
+      const [
+        nextSummary,
+        nextOptions,
+        nextAllResults,
+        nextResults,
+        nextMarketShare,
+        nextTimeseries,
+        nextUnits,
+        nextProducts,
+      ] = await Promise.all([
+        getSummary(selectedDate.value),
+        getOptions(selectedDate.value),
+        baseResultsRequest,
+        filteredResultsRequest,
+        getMarketShare(selectedDate.value),
+        getTimeseries(selectedDate.value),
+        getUnits(selectedDate.value),
+        getProducts(selectedDate.value),
+      ]);
       summary.value = nextSummary;
       options.value = nextOptions;
+      allResults.value = nextAllResults.results;
       results.value = nextResults.results;
       marketShare.value = nextMarketShare.market_share;
       timeseries.value = nextTimeseries.timeseries;
@@ -93,10 +112,14 @@ export function useDashboardData() {
     status.value = "";
     try {
       const run = await ingest(selectedDate.value);
-      status.value = `${run.records_upserted} Habitat records stored for ${run.target_date}.`;
+      latestStoredDate.value = run.target_date;
+      status.value =
+        run.records_upserted > 0
+          ? `Updated ${run.records_upserted} Habitat results for ${run.target_date}.`
+          : `No Habitat accepted results found for ${run.target_date}.`;
       await loadAll();
     } catch (ingestError) {
-      error.value = ingestError instanceof Error ? ingestError.message : "Unable to run ingestion.";
+      error.value = ingestError instanceof Error ? ingestError.message : "Unable to update results.";
     } finally {
       ingesting.value = false;
     }
@@ -108,12 +131,19 @@ export function useDashboardData() {
     auctionProduct.value = "";
   }
 
+  function selectLatestDate() {
+    if (latestStoredDate.value) {
+      selectedDate.value = latestStoredDate.value;
+    }
+  }
+
   return {
     selectedDate,
     serviceType,
     auctionUnit,
     auctionProduct,
     results,
+    allResults,
     summary,
     options,
     marketShare,
@@ -124,9 +154,12 @@ export function useDashboardData() {
     ingesting,
     error,
     status,
+    latestStoredDate,
     hasResults,
+    hasStoredDataForDate,
     loadAll,
     runIngest,
     clearFilters,
+    selectLatestDate,
   };
 }

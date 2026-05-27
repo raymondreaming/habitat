@@ -1,42 +1,62 @@
 <script setup lang="ts">
-import { Zap } from "lucide-vue-next";
+import Icons from "./Icons.vue";
 
 defineProps<{
   selectedDate: string;
   ingesting: boolean;
+  latestDate: string | null;
+  status: string;
 }>();
 
 const emit = defineEmits<{
   "update:selectedDate": [value: string];
   ingest: [];
+  selectLatest: [];
 }>();
 </script>
 
 <template>
-  <section class="mb-5 flex flex-col justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-end">
-    <div>
-      <p class="text-xs font-extrabold uppercase text-slate-500">NESO auction results</p>
-      <h1 class="mt-1 text-2xl font-extrabold leading-tight text-slate-950">Market Performance</h1>
+  <section class="commandBar">
+    <div class="commandBar__copy">
+      <h1>Ancillary Services Performance</h1>
+      <p>Habitat cleared volume, price exposure, market share, and asset contribution by delivery day.</p>
     </div>
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <label class="grid gap-1">
-        <span class="text-xs font-bold text-slate-500">Delivery date</span>
-        <input
-          class="h-10 rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-950"
-          :value="selectedDate"
-          type="date"
-          @input="emit('update:selectedDate', ($event.target as HTMLInputElement).value)"
-        />
-      </label>
+
+    <div class="commandBar__actions">
       <button
-        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-4 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-65"
-        :disabled="ingesting"
+        v-if="latestDate && latestDate !== selectedDate"
+        class="subtleButton"
         type="button"
-        @click="emit('ingest')"
+        @click="emit('selectLatest')"
       >
-        <Zap :size="18" />
-        {{ ingesting ? "Ingesting" : "Ingest" }}
+        Latest {{ latestDate }}
       </button>
+
+      <label class="dateControl">
+        <span>Delivery day</span>
+        <span class="relative">
+          <Icons name="calendar" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#868F97]" :size="17" />
+          <input
+            class="pl-10"
+            :value="selectedDate"
+            type="date"
+            @input="emit('update:selectedDate', ($event.target as HTMLInputElement).value)"
+          />
+        </span>
+      </label>
+
+      <div class="commandBar__update">
+        <button
+          class="primaryButton"
+          :disabled="ingesting"
+          type="button"
+          @click="emit('ingest')"
+        >
+          <Icons name="refresh" :class="ingesting ? 'animate-spin' : ''" :size="17" />
+          {{ ingesting ? "Updating" : "Update results" }}
+        </button>
+        <span v-if="status">{{ status }}</span>
+      </div>
     </div>
   </section>
 </template>
