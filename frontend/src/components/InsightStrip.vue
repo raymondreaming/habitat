@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { MarketShare, ProductPerformance, Summary, UnitPerformance } from "../api";
+import type { AuctionResult, MarketShare, ProductPerformance, Summary, UnitPerformance } from "../api";
 import { currency } from "../utils/format";
 
 const props = defineProps<{
   summary: Summary | null;
   marketShare: MarketShare[];
   products: ProductPerformance[];
+  results: AuctionResult[];
   units: UnitPerformance[];
   loading: boolean;
 }>();
@@ -16,35 +17,72 @@ const strongestShare = computed(() =>
     .filter((row) => row.habitat_executed_quantity > 0)
     .sort((a, b) => b.habitat_market_share_percent - a.habitat_market_share_percent)[0],
 );
-const topProduct = computed(() => props.products[0]);
-const topUnit = computed(() => props.units[0]);
+const topProduct = computed(() => [...props.products].sort((a, b) => b.estimated_gross_revenue - a.estimated_gross_revenue)[0]);
+const topUnit = computed(() => [...props.units].sort((a, b) => b.estimated_gross_revenue - a.estimated_gross_revenue)[0]);
+const bestPricePremium = computed(() =>
+  props.marketShare
+    .filter((row) => row.habitat_records > 0 && row.market_records > 0)
+    .map((row) => ({
+      premium: row.habitat_average_clearing_price - row.market_average_clearing_price,
+      serviceType: row.service_type,
+    }))
+    .sort((a, b) => b.premium - a.premium)[0],
+);
+const negativePriceExposure = computed(() => {
+  const rows = props.results.filter((row) => row.clearing_price < 0);
+  return {
+    count: rows.length,
+    volume: rows.reduce((sum, row) => sum + row.executed_quantity, 0),
+  };
+});
+const signals = computed(() => [
+  {
+    label: "Strongest market position",
+    value: strongestShare.value
+      ? `${strongestShare.value.service_type} ${strongestShare.value.habitat_market_share_percent.toFixed(1)}%`
+      : "-",
+    detail: "of accepted market MW",
+  },
+  {
+    label: "Highest-value product",
+    value: topProduct.value ? currency(topProduct.value.estimated_gross_revenue) : "-",
+    detail: topProduct.value ? `${topProduct.value.service_type} ${topProduct.value.auction_product}` : "no product data",
+  },
+  {
+    label: "Top contributing asset",
+    value: topUnit.value ? topUnit.value.auction_unit : "-",
+    detail: topUnit.value ? currency(topUnit.value.estimated_gross_revenue) : "no unit data",
+  },
+  {
+    label: "Best price premium",
+    value: bestPricePremium.value ? `£${bestPricePremium.value.premium.toFixed(2)}` : "-",
+    detail: bestPricePremium.value ? `${bestPricePremium.value.serviceType} vs market avg` : "no market comparison",
+  },
+  {
+    label: "Negative-price exposure",
+    value: negativePriceExposure.value.count > 0 ? `${negativePriceExposure.value.volume.toFixed(0)} MW` : "None",
+    detail:
+      negativePriceExposure.value.count > 0
+        ? `${negativePriceExposure.value.count} accepted rows below £0`
+        : "no accepted rows below £0",
+  },
+]);
 </script>
 
 <template>
-  <section class="mb-5 grid gap-3 lg:grid-cols-3">
-    <template v-if="loading">
-      <article v-for="index in 3" :key="index" class="animate-pulse rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="h-3 w-32 rounded bg-slate-100"></div>
-        <div class="mt-3 h-7 w-44 rounded bg-slate-100"></div>
+  <section class="insightRail">
+    <div class="insightRail__items">
+      <article v-for="signal in signals" :key="signal.label" class="insightCell" :class="{ 'insightCell--loading': loading }">
+        <p>{{ signal.label }}</p>
+        <strong>
+          <template v-if="loading"><i></i></template>
+          <template v-else>{{ signal.value }}</template>
+        </strong>
+        <span>
+          <template v-if="loading"><i></i></template>
+          <template v-else>{{ signal.detail }}</template>
+        </span>
       </article>
-    </template>
-    <article v-else class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <p class="text-xs font-extrabold uppercase text-slate-500">Best market position</p>
-      <strong class="mt-2 block text-xl font-extrabold text-slate-950">
-        {{ strongestShare ? `${strongestShare.service_type} ${strongestShare.habitat_market_share_percent.toFixed(1)}%` : "-" }}
-      </strong>
-    </article>
-    <article v-if="!loading" class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <p class="text-xs font-extrabold uppercase text-slate-500">Top product</p>
-      <strong class="mt-2 block text-xl font-extrabold text-slate-950">
-        {{ topProduct ? `${topProduct.service_type} ${topProduct.auction_product}` : "-" }}
-      </strong>
-    </article>
-    <article v-if="!loading" class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <p class="text-xs font-extrabold uppercase text-slate-500">Top unit value</p>
-      <strong class="mt-2 block text-xl font-extrabold text-slate-950">
-        {{ topUnit ? `${topUnit.auction_unit} ${currency(topUnit.estimated_gross_revenue)}` : currency(summary?.estimated_gross_revenue) }}
-      </strong>
-    </article>
+    </div>
   </section>
 </template>

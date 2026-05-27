@@ -25,6 +25,7 @@ export function useDashboardData() {
   const auctionUnit = ref("");
   const auctionProduct = ref("");
   const results = shallowRef<AuctionResult[]>([]);
+  const allResults = shallowRef<AuctionResult[]>([]);
   const summary = shallowRef<Summary | null>(null);
   const options = shallowRef<Options | null>(null);
   const marketShare = shallowRef<MarketShare[]>([]);
@@ -61,23 +62,38 @@ export function useDashboardData() {
     loading.value = true;
     error.value = "";
     try {
-      const [nextSummary, nextOptions, nextResults, nextMarketShare, nextTimeseries, nextUnits, nextProducts] =
-        await Promise.all([
-          getSummary(selectedDate.value),
-          getOptions(selectedDate.value),
-          getResults({
+      const hasFilters = Boolean(serviceType.value || auctionUnit.value || auctionProduct.value);
+      const baseResultsRequest = getResults({ date: selectedDate.value });
+      const filteredResultsRequest = hasFilters
+        ? getResults({
             date: selectedDate.value,
             serviceType: serviceType.value,
             auctionUnit: auctionUnit.value,
             auctionProduct: auctionProduct.value,
-          }),
-          getMarketShare(selectedDate.value),
-          getTimeseries(selectedDate.value),
-          getUnits(selectedDate.value),
-          getProducts(selectedDate.value),
-        ]);
+          })
+        : baseResultsRequest;
+      const [
+        nextSummary,
+        nextOptions,
+        nextAllResults,
+        nextResults,
+        nextMarketShare,
+        nextTimeseries,
+        nextUnits,
+        nextProducts,
+      ] = await Promise.all([
+        getSummary(selectedDate.value),
+        getOptions(selectedDate.value),
+        baseResultsRequest,
+        filteredResultsRequest,
+        getMarketShare(selectedDate.value),
+        getTimeseries(selectedDate.value),
+        getUnits(selectedDate.value),
+        getProducts(selectedDate.value),
+      ]);
       summary.value = nextSummary;
       options.value = nextOptions;
+      allResults.value = nextAllResults.results;
       results.value = nextResults.results;
       marketShare.value = nextMarketShare.market_share;
       timeseries.value = nextTimeseries.timeseries;
@@ -127,6 +143,7 @@ export function useDashboardData() {
     auctionUnit,
     auctionProduct,
     results,
+    allResults,
     summary,
     options,
     marketShare,
