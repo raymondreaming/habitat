@@ -62,7 +62,7 @@ SCHEMA_STATEMENTS = [
 
 
 def connect(database_url: Optional[str] = None):
-    return psycopg.connect(database_url or get_config().database_url, row_factory=dict_row)
+    return psycopg.connect(database_url or get_config().database_url, row_factory=dict_row, connect_timeout=10)
 
 
 def init_db(database_url: Optional[str] = None) -> None:
