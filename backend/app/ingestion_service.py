@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, Optional
 from app import database
 from app.datasets import HABITAT_AUCTION_RESULTS, NesoDataset
 from app.neso_client import NesoClient
+from app.neso_queries import build_daily_dataset_sql, build_market_totals_sql
 from app.normalizers import normalize_auction_result, normalize_market_service_total
 from app.repository import AuctionResultsRepository
 
@@ -28,17 +29,18 @@ class IngestionService:
             run_id = self.repository.create_ingestion_run(conn, target_date, self.dataset)
             conn.commit()
             try:
-                sql = self.dataset.build_daily_sql(target_date)
+                sql = build_daily_dataset_sql(self.dataset, target_date)
                 raw_records = self.client.search_sql(sql)
                 records = [self.normalizer(record, self.dataset) for record in raw_records]
                 upserted = self.repository.upsert_results(conn, records)
-                market_sql = self.dataset.build_market_service_totals_sql(target_date)
-                raw_market_totals = self.client.search_sql(market_sql)
-                market_totals = [
-                    normalize_market_service_total(record, target_date, self.dataset)
-                    for record in raw_market_totals
-                ]
-                self.repository.upsert_market_service_totals(conn, market_totals)
+                if self.dataset.market_totals:
+                    market_sql = build_market_totals_sql(self.dataset, target_date)
+                    raw_market_totals = self.client.search_sql(market_sql)
+                    market_totals = [
+                        normalize_market_service_total(record, target_date, self.dataset)
+                        for record in raw_market_totals
+                    ]
+                    self.repository.upsert_market_service_totals(conn, market_totals)
                 conn.commit()
             except Exception as exc:
                 conn.rollback()

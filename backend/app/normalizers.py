@@ -1,12 +1,8 @@
-from datetime import datetime
 from datetime import date
 from typing import Any, Dict
 
 from app.datasets import HABITAT_AUCTION_RESULTS, NesoDataset
-
-
-class NesoDataError(RuntimeError):
-    pass
+from app.parsing import optional_text, parse_float, parse_int, parse_timestamp, require_text
 
 
 def normalize_auction_result(
@@ -45,47 +41,3 @@ def normalize_market_service_total(
         "average_clearing_price": parse_float(record, "average_clearing_price"),
         "raw_json": record,
     }
-
-
-def require_text(record: Dict[str, Any], key: str) -> str:
-    value = record.get(key)
-    if value is None or str(value).strip() == "":
-        raise NesoDataError(f"missing required NESO field: {key}")
-    return str(value)
-
-
-def optional_text(value: Any) -> str:
-    if value is None:
-        return None
-    text = str(value).strip()
-    return text or None
-
-
-def parse_float(record: Dict[str, Any], key: str) -> float:
-    value = record.get(key)
-    if value is None:
-        raise NesoDataError(f"missing required numeric NESO field: {key}")
-    try:
-        return float(value)
-    except (TypeError, ValueError) as exc:
-        raise NesoDataError(f"invalid numeric NESO field {key}: {value}") from exc
-
-
-def parse_int(record: Dict[str, Any], key: str) -> int:
-    value = record.get(key)
-    if value is None:
-        raise NesoDataError(f"missing required integer NESO field: {key}")
-    try:
-        return int(value)
-    except (TypeError, ValueError) as exc:
-        raise NesoDataError(f"invalid integer NESO field {key}: {value}") from exc
-
-
-def parse_timestamp(record: Dict[str, Any], key: str) -> datetime:
-    value = record.get(key)
-    if value is None:
-        raise NesoDataError(f"missing required timestamp NESO field: {key}")
-    try:
-        return datetime.fromisoformat(str(value))
-    except ValueError as exc:
-        raise NesoDataError(f"invalid timestamp NESO field {key}: {value}") from exc

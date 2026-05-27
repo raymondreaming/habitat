@@ -1,41 +1,33 @@
 <script setup lang="ts">
 import Icons from "./Icons.vue";
 
-const lockedItems = [
+const navItems = [
+  { label: "Market Performance", icon: "barChart", active: true },
   { label: "Historical Trends", icon: "trendingUp" },
   { label: "Asset Map", icon: "map" },
   { label: "Revenue Model", icon: "clock" },
-  { label: "Admin Settings", icon: "settings" },
-];
+] as const;
 </script>
 
 <template>
   <aside class="appSidebar">
-    <nav class="flex h-full flex-col gap-2 p-4">
+    <nav class="sidebarNav" aria-label="Primary">
       <a
-        class="navItem navItem--active"
+        v-for="item in navItems"
+        :key="item.label"
+        class="navItem"
+        :class="{ 'navItem--active': item.active }"
         href="#"
-        aria-current="page"
+        :aria-current="item.active ? 'page' : undefined"
+        :aria-label="item.label"
+        :title="item.label"
       >
-        <Icons name="barChart" :size="18" />
-        Market Performance
+        <Icons :name="item.icon" :size="18" />
       </a>
 
-      <div class="navSection">
-        <button
-          v-for="item in lockedItems"
-          :key="item.label"
-          class="lockedNavItem"
-          disabled
-          type="button"
-        >
-          <span class="flex items-center gap-3">
-            <Icons :name="item.icon" :size="18" />
-            {{ item.label }}
-          </span>
-          <Icons name="lock" :size="15" />
-        </button>
-      </div>
+      <button class="navItem navItem--bottom" type="button" aria-label="Admin Settings" title="Admin Settings">
+        <Icons name="settings" :size="18" />
+      </button>
     </nav>
   </aside>
 </template>

@@ -2,6 +2,7 @@
 import { useVirtualizer, type VirtualItem } from "@tanstack/vue-virtual";
 import { computed, ref } from "vue";
 import type { AuctionResult, Options } from "../api";
+import AppSelect from "./AppSelect.vue";
 import Icons from "./Icons.vue";
 import Sparkline from "./Sparkline.vue";
 
@@ -13,6 +14,7 @@ const props = defineProps<{
   serviceType: string;
   auctionUnit: string;
   auctionProduct: string;
+  marketNote: string;
 }>();
 
 const emit = defineEmits<{
@@ -83,33 +85,36 @@ function priceTrendLabel(row: AuctionResult) {
 <template>
   <section class="workspaceSection">
     <div class="sectionHeader sectionHeader--filters">
-      <h2 class="headerWithIcon">
-        <Icons name="activity" :size="17" />
-        Auction Audit Trail
-      </h2>
+      <div class="auditHeading">
+        <h2 class="headerWithIcon">
+          <Icons name="activity" :size="17" />
+          Auction Audit Trail
+        </h2>
+        <p v-if="marketNote">{{ marketNote }}</p>
+      </div>
       <div class="filters">
-        <label>
-          <span>Service</span>
-          <select :value="serviceType" @change="emit('update:serviceType', ($event.target as HTMLSelectElement).value)">
-            <option value="">All</option>
-            <option v-for="value in options?.service_types" :key="value" :value="value">{{ value }}</option>
-          </select>
-        </label>
-        <label>
-          <span>Unit</span>
-          <select :value="auctionUnit" @change="emit('update:auctionUnit', ($event.target as HTMLSelectElement).value)">
-            <option value="">All</option>
-            <option v-for="value in options?.auction_units" :key="value" :value="value">{{ value }}</option>
-          </select>
-        </label>
-        <label>
-          <span>Product</span>
-          <select :value="auctionProduct" @change="emit('update:auctionProduct', ($event.target as HTMLSelectElement).value)">
-            <option value="">All</option>
-            <option v-for="value in options?.auction_products" :key="value" :value="value">{{ value }}</option>
-          </select>
-        </label>
-        <button class="secondary" type="button" @click="emit('clear')">
+        <AppSelect
+          label="Service"
+          :model-value="serviceType"
+          :options="options?.service_types ?? []"
+          placeholder="All services"
+          @update:model-value="emit('update:serviceType', $event)"
+        />
+        <AppSelect
+          label="Unit"
+          :model-value="auctionUnit"
+          :options="options?.auction_units ?? []"
+          placeholder="All units"
+          @update:model-value="emit('update:auctionUnit', $event)"
+        />
+        <AppSelect
+          label="Product"
+          :model-value="auctionProduct"
+          :options="options?.auction_products ?? []"
+          placeholder="All products"
+          @update:model-value="emit('update:auctionProduct', $event)"
+        />
+        <button class="secondary filterClearButton" type="button" @click="emit('clear')">
           <Icons name="search" :size="17" />
           Clear
         </button>
@@ -153,7 +158,6 @@ function priceTrendLabel(row: AuctionResult) {
             <span>
               <span class="resultTrend">
                 <Sparkline :points="priceSeriesFor(entry.row)" :label="priceTrendLabel(entry.row)" />
-                <span>{{ priceTrendLabel(entry.row).replace(" price path", "") }}</span>
               </span>
             </span>
           </div>

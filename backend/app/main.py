@@ -48,6 +48,8 @@ def ingest_endpoint(request: Request, date: Optional[str] = Query(default=None))
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
+# Contract: read endpoints below query Postgres through the repository only.
+# NESO HTTP access is intentionally isolated to ingestion_service -> neso_client.
 @app.get("/api/results")
 def results_endpoint(
     date: Optional[str] = Query(default=None),
