@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { MarketShare, ProductPerformance, Summary, UnitPerformance } from "../api";
+import type { AuctionResult, MarketShare, ProductPerformance, Summary, UnitPerformance } from "../api";
 import { currency } from "../utils/format";
 import Icons from "./Icons.vue";
+import Sparkline from "./Sparkline.vue";
 
 const props = defineProps<{
   summary: Summary | null;
   marketShare: MarketShare[];
   products: ProductPerformance[];
+  results: AuctionResult[];
   units: UnitPerformance[];
   loading: boolean;
 }>();
@@ -21,6 +23,26 @@ const strongestShare = computed(() =>
 const topProduct = computed(() => props.products[0]);
 const topUnit = computed(() => props.units[0]);
 const topUnits = computed(() => [...props.units].sort((a, b) => b.estimated_gross_revenue - a.estimated_gross_revenue).slice(0, 5));
+
+const unitPriceSeries = computed(() => {
+  const series = new Map<string, number[]>();
+  const sortedResults = [...props.results].sort(
+    (a, b) => new Date(a.delivery_start).getTime() - new Date(b.delivery_start).getTime(),
+  );
+
+  for (const result of sortedResults) {
+    const points = series.get(result.auction_unit) ?? [];
+    points.push(result.clearing_price);
+    series.set(result.auction_unit, points);
+  }
+
+  return series;
+});
+
+function getUnitSparkline(unit: UnitPerformance) {
+  const points = unitPriceSeries.value.get(unit.auction_unit) ?? [];
+  return points.length > 1 ? points : [unit.average_clearing_price, unit.average_clearing_price];
+}
 
 const tickers = computed(() => [
   {
@@ -55,6 +77,37 @@ const tickers = computed(() => [
 
 <template>
   <aside class="tickerRail">
+    <div class="tickerRail__units">
+      <div class="tickerRail__header">
+        <Icons name="zap" :size="16" />
+        <span>Top Units</span>
+      </div>
+      <ol>
+        <template v-if="loading">
+          <li v-for="index in 5" :key="index" class="railUnit railUnit--loading">
+            <span>{{ String(index).padStart(2, "0") }}</span>
+            <strong><i></i></strong>
+            <small><i></i></small>
+            <em></em>
+          </li>
+        </template>
+        <template v-else>
+          <li v-for="(unit, index) in topUnits" :key="unit.auction_unit" class="railUnit">
+            <span>{{ String(index + 1).padStart(2, "0") }}</span>
+            <strong>{{ unit.auction_unit }}</strong>
+            <small>{{ currency(unit.estimated_gross_revenue) }} · {{ unit.executed_quantity.toFixed(0) }} MW</small>
+            <Sparkline
+              class="railUnit__sparkline"
+              :height="18"
+              :label="`${unit.auction_unit} clearing price trend`"
+              :points="getUnitSparkline(unit)"
+              :width="62"
+            />
+          </li>
+        </template>
+      </ol>
+    </div>
+
     <div class="tickerRail__header">
       <Icons name="activity" :size="16" />
       <span>Market Tape</span>
@@ -76,29 +129,6 @@ const tickers = computed(() => [
           <small>{{ ticker.detail }}</small>
         </div>
       </template>
-    </div>
-
-    <div class="tickerRail__units">
-      <div class="tickerRail__header">
-        <Icons name="zap" :size="16" />
-        <span>Top Units</span>
-      </div>
-      <ol>
-        <template v-if="loading">
-          <li v-for="index in 5" :key="index" class="railUnit railUnit--loading">
-            <span>{{ String(index).padStart(2, "0") }}</span>
-            <strong><i></i></strong>
-            <small><i></i></small>
-          </li>
-        </template>
-        <template v-else>
-          <li v-for="(unit, index) in topUnits" :key="unit.auction_unit" class="railUnit">
-            <span>{{ String(index + 1).padStart(2, "0") }}</span>
-            <strong>{{ unit.auction_unit }}</strong>
-            <small>{{ currency(unit.estimated_gross_revenue) }} · {{ unit.executed_quantity.toFixed(0) }} MW</small>
-          </li>
-        </template>
-      </ol>
     </div>
   </aside>
 </template>

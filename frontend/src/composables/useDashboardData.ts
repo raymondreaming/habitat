@@ -40,9 +40,18 @@ export function useDashboardData() {
 
   const hasResults = computed(() => results.value.length > 0);
   const hasStoredDataForDate = computed(() => (summary.value?.total_records ?? 0) > 0);
+  const marketInterpretation = computed(() => {
+    const strongestPosition = [...marketShare.value]
+      .filter((row) => row.habitat_executed_quantity > 0)
+      .sort((a, b) => b.habitat_market_share_percent - a.habitat_market_share_percent)[0];
+
+    return strongestPosition
+      ? `Habitat's strongest position was ${strongestPosition.service_type}, clearing ${strongestPosition.habitat_market_share_percent.toFixed(1)}% of accepted market volume.`
+      : "";
+  });
 
   onMounted(initializeDashboard);
-  watch([selectedDate, serviceType, auctionUnit, auctionProduct], loadAll);
+  watch([selectedDate, serviceType, auctionUnit, auctionProduct], () => loadAll());
 
   async function initializeDashboard() {
     try {
@@ -58,8 +67,10 @@ export function useDashboardData() {
     await loadAll();
   }
 
-  async function loadAll() {
-    loading.value = true;
+  async function loadAll(loadOptions: { background?: boolean } = {}) {
+    if (!loadOptions.background) {
+      loading.value = true;
+    }
     error.value = "";
     try {
       const hasFilters = Boolean(serviceType.value || auctionUnit.value || auctionProduct.value);
@@ -102,14 +113,16 @@ export function useDashboardData() {
     } catch (loadError) {
       error.value = loadError instanceof Error ? loadError.message : "Unable to load market performance data.";
     } finally {
-      loading.value = false;
+      if (!loadOptions.background) {
+        loading.value = false;
+      }
     }
   }
 
   async function runIngest() {
     ingesting.value = true;
     error.value = "";
-    status.value = "";
+    status.value = `Updating NESO auction results for ${selectedDate.value}.`;
     try {
       const run = await ingest(selectedDate.value);
       latestStoredDate.value = run.target_date;
@@ -117,9 +130,10 @@ export function useDashboardData() {
         run.records_upserted > 0
           ? `Updated ${run.records_upserted} Habitat results for ${run.target_date}.`
           : `No Habitat accepted results found for ${run.target_date}.`;
-      await loadAll();
+      await loadAll({ background: true });
     } catch (ingestError) {
       error.value = ingestError instanceof Error ? ingestError.message : "Unable to update results.";
+      status.value = `Update failed for ${selectedDate.value}.`;
     } finally {
       ingesting.value = false;
     }
@@ -157,6 +171,7 @@ export function useDashboardData() {
     latestStoredDate,
     hasResults,
     hasStoredDataForDate,
+    marketInterpretation,
     loadAll,
     runIngest,
     clearFilters,
